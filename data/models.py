@@ -326,11 +326,10 @@ class PreciosRepository:
             fecha_vigencia, precio_c, precio_b, precio_a, precio_aa, precio_aaa, precio_jumbo
         ))
     
-    def obtener_historial_precios(self) -> List[Dict]:
-        """Obtiene el historial de precios"""
-        query = "SELECT * FROM precios_huevos ORDER BY fecha_vigencia DESC"
+    def obtener_historial_precios(self, limit: int = 10) -> List[Dict]:
+        """Obtiene el historial de precios (limitado)"""
+        query = f"SELECT * FROM precios_huevos ORDER BY fecha_vigencia DESC LIMIT {limit}"
         return self.db.execute_query(query)
-
 
 class PedidosRepository:
     """Repositorio para gestionar pedidos y despachos"""
@@ -477,6 +476,20 @@ class InsumosRepository:
         """
         return self.db.execute_query(query, (fecha_inicio, fecha_fin))
     
+    def obtener_compras_por_categoria(self, fecha_inicio: date, fecha_fin: date) -> List[Dict]:
+        """Obtiene el total de compras agrupado por categoría"""
+        query = """
+            SELECT 
+                categoria,
+                COUNT(*) as cantidad_compras,
+                SUM(costo_total) as total_gastado
+            FROM insumos
+            WHERE fecha_compra BETWEEN ? AND ?
+            GROUP BY categoria
+            ORDER BY total_gastado DESC
+        """
+        return self.db.execute_query(query, (fecha_inicio, fecha_fin))
+    
     def registrar_pago_trabajador(self, trabajador_id: int, fecha: date, hora: str,
                                  monto: float, concepto: str = None) -> int:
         """
@@ -502,7 +515,25 @@ class InsumosRepository:
             ORDER BY p.fecha DESC, p.hora DESC
         """
         return self.db.execute_query(query, (fecha_inicio, fecha_fin))
-
+    
+    def obtener_pagos_por_trabajador(self, trabajador_id: int, fecha_inicio: date, fecha_fin: date) -> List[Dict]:
+        """Obtiene el historial de pagos de un trabajador específico"""
+        query = """
+            SELECT * FROM pagos_trabajadores
+            WHERE trabajador_id = ? AND fecha BETWEEN ? AND ?
+            ORDER BY fecha DESC, hora DESC
+        """
+        return self.db.execute_query(query, (trabajador_id, fecha_inicio, fecha_fin))
+    
+    def obtener_total_pagos_trabajador(self, trabajador_id: int, fecha_inicio: date, fecha_fin: date) -> float:
+        """Obtiene el total pagado a un trabajador en un período"""
+        query = """
+            SELECT COALESCE(SUM(monto), 0) as total
+            FROM pagos_trabajadores
+            WHERE trabajador_id = ? AND fecha BETWEEN ? AND ?
+        """
+        result = self.db.execute_query(query, (trabajador_id, fecha_inicio, fecha_fin))
+        return result[0]['total'] if result else 0
 
 class ReportesRepository:
     """Repositorio para generar reportes y análisis"""
