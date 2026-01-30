@@ -564,7 +564,7 @@ class VentasModule:
                 )
                 
                 # Exportar
-                if st.button("📥 Exportar a CSV"):
+                if st.button("📥 Exportar a CSV", key="btn_exportar_ventas"):
                     csv = df_display.to_csv(index=False).encode('utf-8')
                     st.download_button(
                         label="⬇️ Descargar CSV",
