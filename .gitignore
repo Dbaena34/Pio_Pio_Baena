@@ -1,0 +1,17 @@
+# Archivos de datos y diseño
+*.ai
+
+# Notebooks de Jupyter
+*.ipynb
+*.png
+# Carpetas de datos y resultados
+ai/
+
+
+# Python y temporales
+__pycache__/
+.DS_Store
+
+# SQLite databases
+*.db
+data/*.db
