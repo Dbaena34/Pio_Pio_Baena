@@ -339,19 +339,19 @@ class PedidosRepository:
         self.db = db
     
     def crear_pedido(self, cliente_id: int, fecha: date, hora: str,
-                    cantidad_c: int, cantidad_b: int, cantidad_a: int,
-                    cantidad_aa: int, cantidad_aaa: int, cantidad_jumbo: int,
+                    canastillas_c: int, canastillas_b: int, canastillas_a: int,
+                    canastillas_aa: int, canastillas_aaa: int, canastillas_jumbo: int,
                     precio_total: float, observaciones: str = None) -> int:
-        """Crea un nuevo pedido"""
+        """Crea un nuevo pedido (en canastillas)"""
         query = """
             INSERT INTO pedidos 
-            (cliente_id, fecha, hora, cantidad_c, cantidad_b, cantidad_a, 
-             cantidad_aa, cantidad_aaa, cantidad_jumbo, precio_total, observaciones)
+            (cliente_id, fecha, hora, canastillas_c, canastillas_b, canastillas_a, 
+             canastillas_aa, canastillas_aaa, canastillas_jumbo, precio_total, observaciones)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """
         return self.db.execute_insert(query, (
-            cliente_id, fecha, hora, cantidad_c, cantidad_b, cantidad_a,
-            cantidad_aa, cantidad_aaa, cantidad_jumbo, precio_total, observaciones
+            cliente_id, fecha, hora, canastillas_c, canastillas_b, canastillas_a,
+            canastillas_aa, canastillas_aaa, canastillas_jumbo, precio_total, observaciones
         ))
     
     def obtener_pedidos_pendientes(self) -> List[Dict]:
@@ -361,8 +361,8 @@ class PedidosRepository:
                 p.*,
                 c.nombre as cliente_nombre,
                 c.contacto as cliente_contacto,
-                (p.cantidad_c + p.cantidad_b + p.cantidad_a + 
-                 p.cantidad_aa + p.cantidad_aaa + p.cantidad_jumbo) as total_huevos
+                (p.canastillas_c + p.canastillas_b + p.canastillas_a + 
+                 p.canastillas_aa + p.canastillas_aaa + p.canastillas_jumbo) as total_canastillas
             FROM pedidos p
             JOIN clientes c ON p.cliente_id = c.id
             WHERE p.estado = 'pendiente'
@@ -384,31 +384,47 @@ class PedidosRepository:
         result = self.db.execute_query(query, (pedido_id,))
         return result[0] if result else {}
     
+    def actualizar_pedido(self, pedido_id: int, canastillas_c: int, canastillas_b: int,
+                         canastillas_a: int, canastillas_aa: int, canastillas_aaa: int,
+                         canastillas_jumbo: int, precio_total: float, observaciones: str = None) -> int:
+        """Actualiza un pedido pendiente"""
+        query = """
+            UPDATE pedidos 
+            SET canastillas_c = ?, canastillas_b = ?, canastillas_a = ?,
+                canastillas_aa = ?, canastillas_aaa = ?, canastillas_jumbo = ?,
+                precio_total = ?, observaciones = ?
+            WHERE id = ? AND estado = 'pendiente'
+        """
+        return self.db.execute_update(query, (
+            canastillas_c, canastillas_b, canastillas_a, canastillas_aa, 
+            canastillas_aaa, canastillas_jumbo, precio_total, observaciones, pedido_id
+        ))
+    
     def cancelar_pedido(self, pedido_id: int) -> int:
         """Cancela un pedido"""
         query = "UPDATE pedidos SET estado = 'cancelado' WHERE id = ?"
         return self.db.execute_update(query, (pedido_id,))
     
     def despachar_pedido(self, pedido_id: int, fecha: date, hora: str,
-                        cantidad_c: int, cantidad_b: int, cantidad_a: int,
-                        cantidad_aa: int, cantidad_aaa: int, cantidad_jumbo: int,
+                        canastillas_c: int, canastillas_b: int, canastillas_a: int,
+                        canastillas_aa: int, canastillas_aaa: int, canastillas_jumbo: int,
                         observaciones: str = None) -> int:
         """
         Registra un despacho.
         El trigger automáticamente:
-        - Descuenta el stock
+        - Descuenta el stock (canastillas * 30)
         - Marca el pedido como completado
         - Registra el ingreso
         """
         query = """
             INSERT INTO despachos 
-            (pedido_id, fecha, hora, cantidad_c, cantidad_b, cantidad_a,
-             cantidad_aa, cantidad_aaa, cantidad_jumbo, observaciones)
+            (pedido_id, fecha, hora, canastillas_c, canastillas_b, canastillas_a,
+             canastillas_aa, canastillas_aaa, canastillas_jumbo, observaciones)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """
         return self.db.execute_insert(query, (
-            pedido_id, fecha, hora, cantidad_c, cantidad_b, cantidad_a,
-            cantidad_aa, cantidad_aaa, cantidad_jumbo, observaciones
+            pedido_id, fecha, hora, canastillas_c, canastillas_b, canastillas_a,
+            canastillas_aa, canastillas_aaa, canastillas_jumbo, observaciones
         ))
     
     def obtener_historial_ventas(self, fecha_inicio: date, fecha_fin: date) -> List[Dict]:
@@ -418,7 +434,9 @@ class PedidosRepository:
                 p.*,
                 c.nombre as cliente_nombre,
                 d.fecha as fecha_despacho,
-                d.hora as hora_despacho
+                d.hora as hora_despacho,
+                (p.canastillas_c + p.canastillas_b + p.canastillas_a + 
+                 p.canastillas_aa + p.canastillas_aaa + p.canastillas_jumbo) as total_canastillas
             FROM pedidos p
             JOIN clientes c ON p.cliente_id = c.id
             LEFT JOIN despachos d ON p.id = d.pedido_id
@@ -427,7 +445,6 @@ class PedidosRepository:
             ORDER BY p.fecha DESC
         """
         return self.db.execute_query(query, (fecha_inicio, fecha_fin))
-
 
 class InsumosRepository:
     """Repositorio para gestionar insumos y pagos"""
