@@ -89,17 +89,18 @@ CREATE TABLE IF NOT EXISTS trabajadores (
 );
 
 -- Tabla de pedidos
+-- Tabla de pedidos
 CREATE TABLE IF NOT EXISTS pedidos (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     cliente_id INTEGER NOT NULL,
     fecha DATE NOT NULL,
     hora TIME NOT NULL,
-    cantidad_c INTEGER DEFAULT 0,
-    cantidad_b INTEGER DEFAULT 0,
-    cantidad_a INTEGER DEFAULT 0,
-    cantidad_aa INTEGER DEFAULT 0,
-    cantidad_aaa INTEGER DEFAULT 0,
-    cantidad_jumbo INTEGER DEFAULT 0,
+    canastillas_c INTEGER DEFAULT 0,
+    canastillas_b INTEGER DEFAULT 0,
+    canastillas_a INTEGER DEFAULT 0,
+    canastillas_aa INTEGER DEFAULT 0,
+    canastillas_aaa INTEGER DEFAULT 0,
+    canastillas_jumbo INTEGER DEFAULT 0,
     precio_total REAL NOT NULL,
     estado TEXT DEFAULT 'pendiente' CHECK(estado IN ('pendiente', 'completado', 'cancelado')),
     observaciones TEXT,
@@ -113,12 +114,12 @@ CREATE TABLE IF NOT EXISTS despachos (
     pedido_id INTEGER NOT NULL,
     fecha DATE NOT NULL,
     hora TIME NOT NULL,
-    cantidad_c INTEGER DEFAULT 0,
-    cantidad_b INTEGER DEFAULT 0,
-    cantidad_a INTEGER DEFAULT 0,
-    cantidad_aa INTEGER DEFAULT 0,
-    cantidad_aaa INTEGER DEFAULT 0,
-    cantidad_jumbo INTEGER DEFAULT 0,
+    canastillas_c INTEGER DEFAULT 0,
+    canastillas_b INTEGER DEFAULT 0,
+    canastillas_a INTEGER DEFAULT 0,
+    canastillas_aa INTEGER DEFAULT 0,
+    canastillas_aaa INTEGER DEFAULT 0,
+    canastillas_jumbo INTEGER DEFAULT 0,
     observaciones TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (pedido_id) REFERENCES pedidos(id)
@@ -209,18 +210,20 @@ BEGIN
     WHERE id = 1;
 END;
 
--- Trigger: Descontar stock cuando se completa un despacho
-CREATE TRIGGER IF NOT EXISTS update_stock_after_despacho
+-- Trigger: Descontar stock cuando se completa un despacho (REEMPLAZAR el existente)
+DROP TRIGGER IF EXISTS update_stock_after_despacho;
+
+CREATE TRIGGER update_stock_after_despacho
 AFTER INSERT ON despachos
 BEGIN
     UPDATE stock_huevos 
     SET 
-        tipo_c = tipo_c - NEW.cantidad_c,
-        tipo_b = tipo_b - NEW.cantidad_b,
-        tipo_a = tipo_a - NEW.cantidad_a,
-        tipo_aa = tipo_aa - NEW.cantidad_aa,
-        tipo_aaa = tipo_aaa - NEW.cantidad_aaa,
-        tipo_jumbo = tipo_jumbo - NEW.cantidad_jumbo,
+        tipo_c = tipo_c - (NEW.canastillas_c * 30),
+        tipo_b = tipo_b - (NEW.canastillas_b * 30),
+        tipo_a = tipo_a - (NEW.canastillas_a * 30),
+        tipo_aa = tipo_aa - (NEW.canastillas_aa * 30),
+        tipo_aaa = tipo_aaa - (NEW.canastillas_aaa * 30),
+        tipo_jumbo = tipo_jumbo - (NEW.canastillas_jumbo * 30),
         updated_at = CURRENT_TIMESTAMP
     WHERE id = 1;
     
