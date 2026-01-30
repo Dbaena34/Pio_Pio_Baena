@@ -5,7 +5,7 @@ from modules import utils as util
 
 from modules.mod1 import render_produccion
 from modules.mod2 import render_stock
-
+from modules.mod3 import render_ventas
 
 
 
@@ -32,28 +32,8 @@ with tabs[0]:
     render_produccion()
 with tabs[1]:
     render_stock()
-with tabs[2]: 
-    st.header("🚚 Gestión de Ventas y Pedidos")
-    st.write("Registra y gestiona las ventas y pedidos de insumos y productos.")
-    subtabs = st.tabs(["🛒 Pedidos", "🚚 Ventas"]) 
-    with subtabs[0]: 
-        st.header("🛒 Gestión de Pedidos")
-        st.write("Registra y gestiona los pedidos de insumos y productos.")
-        # Contenido específico para la pestaña de Pedidos
-        order_item = st.text_input("Nombre del insumo/producto a pedir")
-        order_quantity = st.number_input("Cantidad a pedir", min_value=0, step=1)
-        if st.button("Registrar Pedido"):
-            st.success(f"Pedido registrado: {order_item} - {order_quantity} unidades.")
-    with subtabs[1]:        
-        st.header("🚚 Gestión de Ventas")
-        st.write("Registra las ventas diarias y analiza el rendimiento.")
-        # Contenido específico para la pestaña de Ventas
-        sale_item = st.text_input("Nombre del producto vendido")
-        sale_quantity = st.number_input("Cantidad vendida", min_value=0, step=1)
-        sale_price = st.number_input("Precio por unidad", min_value=0.0, step=0.01)
-        if st.button("Registrar Venta"):
-            total_sale = sale_quantity * sale_price
-            st.success(f"Venta registrada: {sale_item} - {sale_quantity} unidades a ${sale_price:.2f} cada una. Total: ${total_sale:.2f}")
+with tabs[2]:
+    render_ventas()
                 
 with tabs[3]:
     st.header("💰 Gestión de Insumos y Pagos")
