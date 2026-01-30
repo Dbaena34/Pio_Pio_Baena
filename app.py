@@ -37,7 +37,6 @@ with tabs[2]:
     render_ventas()
 with tabs[3]:
     render_insumos_pagos()
-    
 with tabs[4]:
     st.header("📈 Reportes")
     st.write("Genera reportes detallados sobre producción, ventas y stock.")
