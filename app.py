@@ -17,7 +17,7 @@ with col_title:
     st.title("Pio Pio Baena - Gestión Avícola")
 with col_logo:
     util.show_logo(width=90)
-#util.set_custom_style()
+util.set_custom_style()
 #st.divider()
 
 # app.py

@@ -9,6 +9,7 @@ from datetime import datetime, date, timedelta
 import plotly.express as px
 import plotly.graph_objects as go
 from typing import Dict
+from modules import utils as util
 
 # Importar la base de datos y repositorios
 import sys
@@ -28,6 +29,7 @@ class ProduccionModule:
     
     def render(self):
         """Renderiza la interfaz completa del módulo"""
+        #util.set_custom_style()
         st.header("📊 Gestión de Producción Diaria")
         
         # Crear sub-tabs dentro de producción
