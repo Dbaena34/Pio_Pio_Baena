@@ -584,10 +584,122 @@ class ReportesRepository:
             SELECT 
                 (SELECT SUM(tipo_c + tipo_b + tipo_a + tipo_aa + tipo_aaa + tipo_jumbo) 
                  FROM produccion_diaria WHERE fecha BETWEEN ? AND ?) as total_producido,
-                (SELECT SUM(cantidad_c + cantidad_b + cantidad_a + cantidad_aa + cantidad_aaa + cantidad_jumbo)
+                (SELECT SUM((canastillas_c + canastillas_b + canastillas_a + 
+                            canastillas_aa + canastillas_aaa + canastillas_jumbo) * 30)
                  FROM pedidos WHERE estado = 'completado' AND fecha BETWEEN ? AND ?) as total_vendido
         """
         result = self.db.execute_query(query, (fecha_inicio, fecha_fin, fecha_inicio, fecha_fin))
+        return result[0] if result else {}
+    
+    def obtener_produccion_diaria_periodo(self, fecha_inicio: date, fecha_fin: date) -> List[Dict]:
+        """Obtiene la producción diaria agregada por fecha"""
+        query = """
+            SELECT 
+                fecha,
+                SUM(tipo_c) as tipo_c,
+                SUM(tipo_b) as tipo_b,
+                SUM(tipo_a) as tipo_a,
+                SUM(tipo_aa) as tipo_aa,
+                SUM(tipo_aaa) as tipo_aaa,
+                SUM(tipo_jumbo) as tipo_jumbo,
+                SUM(tipo_c + tipo_b + tipo_a + tipo_aa + tipo_aaa + tipo_jumbo) as total
+            FROM produccion_diaria
+            WHERE fecha BETWEEN ? AND ?
+            GROUP BY fecha
+            ORDER BY fecha
+        """
+        return self.db.execute_query(query, (fecha_inicio, fecha_fin))
+    
+    def obtener_ventas_diarias_periodo(self, fecha_inicio: date, fecha_fin: date) -> List[Dict]:
+        """Obtiene las ventas diarias agregadas por fecha"""
+        query = """
+            SELECT 
+                fecha,
+                COUNT(*) as cantidad_ventas,
+                SUM(canastillas_c + canastillas_b + canastillas_a + 
+                    canastillas_aa + canastillas_aaa + canastillas_jumbo) as total_canastillas,
+                SUM(precio_total) as total_ingresos
+            FROM pedidos
+            WHERE estado = 'completado' AND fecha BETWEEN ? AND ?
+            GROUP BY fecha
+            ORDER BY fecha
+        """
+        return self.db.execute_query(query, (fecha_inicio, fecha_fin))
+    
+    def obtener_top_clientes(self, fecha_inicio: date, fecha_fin: date, limit: int = 10) -> List[Dict]:
+        """Obtiene los top clientes por compras"""
+        query = f"""
+            SELECT 
+                c.nombre,
+                COUNT(p.id) as cantidad_compras,
+                SUM(p.precio_total) as total_comprado,
+                SUM(p.canastillas_c + p.canastillas_b + p.canastillas_a + 
+                    p.canastillas_aa + p.canastillas_aaa + p.canastillas_jumbo) as total_canastillas
+            FROM pedidos p
+            JOIN clientes c ON p.cliente_id = c.id
+            WHERE p.estado = 'completado' AND p.fecha BETWEEN ? AND ?
+            GROUP BY c.id, c.nombre
+            ORDER BY total_comprado DESC
+            LIMIT {limit}
+        """
+        return self.db.execute_query(query, (fecha_inicio, fecha_fin))
+    
+    def obtener_ventas_por_categoria(self, fecha_inicio: date, fecha_fin: date) -> Dict:
+        """Obtiene el total de canastillas vendidas por categoría"""
+        query = """
+            SELECT 
+                SUM(canastillas_c) as total_c,
+                SUM(canastillas_b) as total_b,
+                SUM(canastillas_a) as total_a,
+                SUM(canastillas_aa) as total_aa,
+                SUM(canastillas_aaa) as total_aaa,
+                SUM(canastillas_jumbo) as total_jumbo
+            FROM pedidos
+            WHERE estado = 'completado' AND fecha BETWEEN ? AND ?
+        """
+        result = self.db.execute_query(query, (fecha_inicio, fecha_fin))
+        return result[0] if result else {}
+    
+    def calcular_costo_produccion_por_huevo(self, fecha_inicio: date, fecha_fin: date) -> float:
+        """
+        Calcula el costo de producción por huevo.
+        Costo = (Total egresos en alimento + salarios) / Total huevos producidos
+        """
+        # Obtener egresos relacionados con producción
+        query_egresos = """
+            SELECT SUM(monto) as total_egresos
+            FROM movimientos_financieros
+            WHERE tipo = 'egreso' 
+            AND fecha BETWEEN ? AND ?
+            AND (categoria LIKE '%Alimento%' OR categoria LIKE '%trabajador%')
+        """
+        egresos = self.db.execute_query(query_egresos, (fecha_inicio, fecha_fin))
+        total_egresos = egresos[0]['total_egresos'] if egresos and egresos[0]['total_egresos'] else 0
+        
+        # Obtener producción total
+        query_produccion = """
+            SELECT SUM(tipo_c + tipo_b + tipo_a + tipo_aa + tipo_aaa + tipo_jumbo) as total
+            FROM produccion_diaria
+            WHERE fecha BETWEEN ? AND ?
+        """
+        produccion = self.db.execute_query(query_produccion, (fecha_inicio, fecha_fin))
+        total_producido = produccion[0]['total'] if produccion and produccion[0]['total'] else 0
+        
+        if total_producido > 0:
+            return total_egresos / total_producido
+        else:
+            return 0
+    
+    def obtener_estadisticas_stock(self) -> Dict:
+        """Obtiene estadísticas del stock actual"""
+        query = """
+            SELECT 
+                (tipo_c + tipo_b + tipo_a + tipo_aa + tipo_aaa + tipo_jumbo) as total_huevos,
+                tipo_c, tipo_b, tipo_a, tipo_aa, tipo_aaa, tipo_jumbo
+            FROM stock_huevos
+            WHERE id = 1
+        """
+        result = self.db.execute_query(query)
         return result[0] if result else {}
     
 class GallinasRepository:

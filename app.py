@@ -7,6 +7,7 @@ from modules.mod1 import render_produccion
 from modules.mod2 import render_stock
 from modules.mod3 import render_ventas
 from modules.mod4 import render_insumos_pagos
+from modules.mod5 import render_reportes
 
 
 
@@ -37,13 +38,6 @@ with tabs[2]:
     render_ventas()
 with tabs[3]:
     render_insumos_pagos()
+# En tabs[4] (Reportes)
 with tabs[4]:
-    st.header("📈 Reportes")
-    st.write("Genera reportes detallados sobre producción, ventas y stock.")
-    # Contenido específico para la pestaña de Reportes
-    if st.button("Generar Reporte de Producción"):
-        st.info("Reporte de Producción generado. (Funcionalidad en desarrollo)")
-    if st.button("Generar Reporte de Ventas"):
-        st.info("Reporte de Ventas generado. (Funcionalidad en desarrollo)")
-    if st.button("Generar Reporte de Stock"):
-        st.info("Reporte de Stock generado. (Funcionalidad en desarrollo)")
+    render_reportes()
