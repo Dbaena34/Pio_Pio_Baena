@@ -18,7 +18,15 @@ with col_title:
     st.title("Pio Pio Baena - Gestión Avícola")
 with col_logo:
     util.show_logo(width=90)
-util.set_custom_style()
+#util.set_custom_style_2()
+estilo = st.sidebar.radio("Seleccionar Estilo Visual", ["Original (Verde)", "Cosecha (Cálido)", "Tecno (Limpio)"])
+
+if estilo == "Original (Verde)":
+    util.set_custom_style_2()
+elif estilo == "Cosecha (Cálido)":
+    util.set_harvest_style()
+else:
+    util.set_techno_agro_style()
 #st.divider()
 
 # app.py
