@@ -1,0 +1,22 @@
+# Dependencias del Sistema de Gestión Avícola
+# Granja Ponedora - Pío Pío Baena
+
+# Framework principal
+streamlit==1.31.0
+
+# Análisis de datos
+pandas==2.1.4
+numpy==1.26.3
+
+# Visualización
+plotly==5.18.0
+matplotlib==3.8.2
+
+# Manejo de archivos Excel
+openpyxl==3.1.2
+
+# Base de datos (incluida en Python, pero por si acaso)
+# sqlite3 viene con Python
+
+# Utilidades de fecha/hora (incluidas en Python)
+# datetime viene con Python
